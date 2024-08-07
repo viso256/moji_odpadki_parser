@@ -1,5 +1,5 @@
 extern crate alloc;
-use alloc::{string::String, format};
+use alloc::{format, string::String};
 
 pub const API_URL: &str = "https://www.mojiodpadki.si/urniki/urniki-odvoza-odpadkov";
 
@@ -55,6 +55,29 @@ impl From<&str> for Month {
     }
 }
 
+impl core::fmt::Display for Month {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Month::Jan => "januar",
+                Month::Feb => "februar",
+                Month::Mar => "marec",
+                Month::Apr => "april",
+                Month::May => "maj",
+                Month::Jun => "junij",
+                Month::Jul => "julij",
+                Month::Avg => "avgust",
+                Month::Sep => "september",
+                Month::Okt => "oktober",
+                Month::Nov => "november",
+                Month::Dec => "december",
+            }
+        )
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Day {
     pub diaw: DayInAWeek,
@@ -73,6 +96,24 @@ pub enum DayInAWeek {
     Fri,
     Sat,
     Sun,
+}
+
+impl core::fmt::Display for DayInAWeek {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                DayInAWeek::Mon => "ponedeljek",
+                DayInAWeek::Tue => "torek",
+                DayInAWeek::Wen => "sreda",
+                DayInAWeek::Thu => "četrtek",
+                DayInAWeek::Fri => "petek",
+                DayInAWeek::Sat => "sobota",
+                DayInAWeek::Sun => "nedelja",
+            }
+        )
+    }
 }
 
 impl From<&str> for DayInAWeek {
