@@ -3,7 +3,7 @@ use alloc::{string::String, format};
 
 pub const API_URL: &str = "https://www.mojiodpadki.si/urniki/urniki-odvoza-odpadkov";
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MonthlyCalendar {
     pub year: u32,
     pub month: Month,
@@ -18,7 +18,7 @@ const EMPTY_CALENDAR: MonthlyCalendar = MonthlyCalendar {
 const NO_DAY: Option<Day> = None;
 pub const MONTHS_SHOWN: usize = 3;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Month {
     Jan,
     Feb,
@@ -55,7 +55,7 @@ impl From<&str> for Month {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Day {
     pub diaw: DayInAWeek,
     pub mko: bool,
@@ -64,7 +64,7 @@ pub struct Day {
     pub pap: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum DayInAWeek {
     Mon,
     Tue,

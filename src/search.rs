@@ -1,22 +1,24 @@
 extern crate alloc;
+use core::clone;
+
 use alloc::{string::*, format, vec::*, borrow::*};
 
 pub const SEARCH_URL: &str = "https://www.mojiodpadki.si/api2/";
 
-#[derive(serde::Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug, Clone)]
 pub struct Response<'a, T> {
     pub id: &'a str,
     pub jsonrpc: &'a str,
     pub result: Vec<T>,
 }
 
-#[derive(serde::Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug, Clone)]
 pub struct Street {
     pub id: u32,
     pub label: String,
 }
 
-#[derive(serde::Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug, Clone)]
 pub struct Address {
     pub addition: String,
     pub id: u32,
