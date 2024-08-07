@@ -1,4 +1,12 @@
-const API_URL: &str = "https://www.mojiodpadki.si/urniki/urniki-odvoza-odpadkov";
+#![no_std]
+
+#[cfg(feature = "alloc")]
+extern crate alloc;
+
+#[cfg(feature = "alloc")]
+use alloc::{string::String, format};
+
+pub const API_URL: &str = "https://www.mojiodpadki.si/urniki/urniki-odvoza-odpadkov";
 
 #[derive(Debug)]
 pub struct MonthlyCalendar {
@@ -13,7 +21,7 @@ const EMPTY_CALENDAR: MonthlyCalendar = MonthlyCalendar {
     days: [NO_DAY; 31],
 };
 const NO_DAY: Option<Day> = None;
-const MONTHS_SHOWN: usize = 3;
+pub const MONTHS_SHOWN: usize = 3;
 
 #[derive(Debug)]
 pub enum Month {
@@ -185,6 +193,7 @@ pub fn parse_html(body: &str) -> [MonthlyCalendar; MONTHS_SHOWN] {
     months
 }
 
+#[cfg(feature = "alloc")]
 pub fn get_url(uprn: u32) -> String {
     format!("{API_URL}/s/{uprn}/print/version")
 }
