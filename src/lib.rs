@@ -2,9 +2,9 @@ const API_URL: &str = "https://www.mojiodpadki.si/urniki/urniki-odvoza-odpadkov"
 
 #[derive(Debug)]
 pub struct MonthlyCalendar {
-    year: u32,
-    month: Month,
-    days: [Option<Day>; 31],
+    pub year: u32,
+    pub month: Month,
+    pub days: [Option<Day>; 31],
 }
 
 const EMPTY_CALENDAR: MonthlyCalendar = MonthlyCalendar {
@@ -16,7 +16,7 @@ const NO_DAY: Option<Day> = None;
 const MONTHS_SHOWN: usize = 3;
 
 #[derive(Debug)]
-enum Month {
+pub enum Month {
     Jan,
     Feb,
     Mar,
@@ -53,16 +53,16 @@ impl From<&str> for Month {
 }
 
 #[derive(Debug)]
-struct Day {
-    diaw: DayInAWeek,
-    mko: bool,
-    emb: bool,
-    bio: bool,
-    pap: bool,
+pub struct Day {
+    pub diaw: DayInAWeek,
+    pub mko: bool,
+    pub emb: bool,
+    pub bio: bool,
+    pub pap: bool,
 }
 
 #[derive(Debug)]
-enum DayInAWeek {
+pub enum DayInAWeek {
     Mon,
     Tue,
     Wen,
