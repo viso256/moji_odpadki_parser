@@ -1,7 +1,7 @@
 extern crate alloc;
 use alloc::{string::*, format, vec::*, borrow::*};
 
-const SEARCH_URL: &str = "https://www.mojiodpadki.si/api2/";
+pub const SEARCH_URL: &str = "https://www.mojiodpadki.si/api2/";
 
 #[derive(serde::Deserialize, Debug)]
 pub struct Response<'a, T> {
@@ -11,13 +11,13 @@ pub struct Response<'a, T> {
 }
 
 #[derive(serde::Deserialize, Debug)]
-struct Street {
+pub struct Street {
     pub id: u32,
     pub label: String,
 }
 
 #[derive(serde::Deserialize, Debug)]
-struct Address {
+pub struct Address {
     pub addition: String,
     pub id: u32,
     pub municipality: String,
@@ -26,7 +26,7 @@ struct Address {
 }
 
 
-fn get_street_search_url_and_request(term: Option<&str>) -> (String, String) {
+pub fn get_street_search_url_and_request(term: Option<&str>) -> (String, String) {
     let request: String = if let Some(term) = term {
         format!("{{\"method\":\"streets\",\"params\":{{\"term\":\"{term}}}\"}},\"id\":1723033621554,\"jsonrpc\":\"2.0\"}}")
     } else {
@@ -35,7 +35,7 @@ fn get_street_search_url_and_request(term: Option<&str>) -> (String, String) {
     (SEARCH_URL.to_string(), request)
 }
 
-fn get_address_search_url_and_request(street_id: u32) -> (String, String) {
+pub fn get_address_search_url_and_request(street_id: u32) -> (String, String) {
     let request: String = format!("{{\"method\":\"address\",\"params\":{{\"streetId\":\"{street_id}\"}},\"id\":1723033621554,\"jsonrpc\":\"2.0\"}}");
 
     (SEARCH_URL.to_string(), request)
