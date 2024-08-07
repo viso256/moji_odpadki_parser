@@ -28,7 +28,7 @@ pub struct Address {
 
 pub fn get_street_search_url_and_request(term: Option<&str>) -> (String, String) {
     let request: String = if let Some(term) = term {
-        format!("{{\"method\":\"streets\",\"params\":{{\"term\":\"{term}}}\"}},\"id\":1723033621554,\"jsonrpc\":\"2.0\"}}")
+        format!("{{\"method\":\"streets\",\"params\":{{\"term\":\"{term}\"}},\"id\":1723033621554,\"jsonrpc\":\"2.0\"}}")
     } else {
         "{\"method\":\"streets\",\"params\":{},\"id\":1723033621554,\"jsonrpc\":\"2.0\"}".to_owned()
     };
