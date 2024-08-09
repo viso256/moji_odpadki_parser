@@ -138,10 +138,10 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     res.read_to_string(&mut body)?;
     let body = body.as_str();
 
-    let calendar = parse_html(body);
+    let calendar = parse_html(body)?;
 
     println!("___________________________________________________________________________________________");
-    for monthly in calendar.iter() {
+    for monthly in &calendar {
         print!(
             "{:30.30}",
             format!("|   {:5}     {:9}", monthly.year, monthly.month)
@@ -152,7 +152,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n|_____________________________|_____________________________|_____________________________|");
 
     for i in 0..31 {
-        for monthly in calendar.iter() {
+        for monthly in &calendar {
             if let Some(Some(day)) = monthly.days.get(i) {
                 let mut types: Vec<&str> = Vec::new();
                 if day.mko {

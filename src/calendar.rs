@@ -1,5 +1,4 @@
-extern crate alloc;
-use alloc::{format, string::String};
+use crate::error::*;
 
 pub const API_URL: &str = "https://www.mojiodpadki.si/urniki/urniki-odvoza-odpadkov";
 
@@ -7,16 +6,17 @@ pub const API_URL: &str = "https://www.mojiodpadki.si/urniki/urniki-odvoza-odpad
 pub struct MonthlyCalendar {
     pub year: u32,
     pub month: Month,
-    pub days: [Option<Day>; 31],
+    pub days: [Option<Day>; DAYS_IN_A_MONTH],
 }
 
-const EMPTY_CALENDAR: MonthlyCalendar = MonthlyCalendar {
+const _EMPTY_CALENDAR: MonthlyCalendar = MonthlyCalendar {
     year: 0,
     month: Month::Jan,
-    days: [NO_DAY; 31],
+    days: [NO_DAY; DAYS_IN_A_MONTH],
 };
+
 const NO_DAY: Option<Day> = None;
-pub const MONTHS_SHOWN: usize = 3;
+pub const DAYS_IN_A_MONTH: usize = 31;
 
 #[derive(Debug, Clone)]
 pub enum Month {
@@ -34,10 +34,12 @@ pub enum Month {
     Dec,
 }
 
-impl From<&str> for Month {
-    fn from(value: &str) -> Self {
+impl TryFrom<&str> for Month {
+    type Error = ParsingError;
+
+    fn try_from(value: &str) -> std::result::Result<Month, Self::Error> {
         use Month::*;
-        match value {
+        Ok(match value {
             "JANUAR" => Jan,
             "FEBRUAR" => Feb,
             "MAREC" => Mar,
@@ -50,8 +52,14 @@ impl From<&str> for Month {
             "OKTOBER" => Okt,
             "NOVEMBER" => Nov,
             "DECEMBER" => Dec,
-            _ => unreachable!("Month parsing failed!"),
-        }
+            _ => {
+                return Err(Self::Error::MonthName(format!(
+                    "{:.9}{}",
+                    value,
+                    if value.len() > 9 { "..." } else { "" }
+                )))
+            }
+        })
     }
 }
 
@@ -116,10 +124,12 @@ impl core::fmt::Display for DayInAWeek {
     }
 }
 
-impl From<&str> for DayInAWeek {
-    fn from(value: &str) -> Self {
+impl TryFrom<&str> for DayInAWeek {
+    type Error = ParsingError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
         use DayInAWeek::*;
-        match value {
+        Ok(match value {
             "po" => Mon,
             "to" => Tue,
             "sr" => Wen,
@@ -127,68 +137,102 @@ impl From<&str> for DayInAWeek {
             "pe" => Fri,
             "so" => Sat,
             "ne" => Sun,
-            _ => unreachable!("Day in a week parsing failed!"),
-        }
+            _ => {
+                return Err(Self::Error::DIAWName(format!(
+                    "{:.2}{}",
+                    value,
+                    if value.len() > 2 { "..." } else { "" }
+                )))
+            }
+        })
     }
 }
 
-pub fn parse_html(body: &str) -> [MonthlyCalendar; MONTHS_SHOWN] {
-    let mut months = [EMPTY_CALENDAR; MONTHS_SHOWN];
+pub fn parse_html(body: &str) -> Result<Vec<MonthlyCalendar>, ParsingError> {
+    let mut months = Vec::new();
     let tables = body.split("<table class=\"calendar table-responsive\">");
 
     let tables = tables.map(|s| {
-        s.split("</table>")
-            .next()
-            .expect("Should end with </table>")
-    });
+        s.split("</table>").next()
+    }).skip(1);
 
-    let tables = tables.skip(1);
+    if !tables.clone().any(|_| true) {
+        return Err(ParsingError::HTMLParsing {
+            item: "tables",
+            expr: "</table>",
+        });
+    }
 
     let mut year: Option<u32> = None;
 
-    for (mon_i, table) in tables.enumerate() {
+    for table in tables {
+        let table = table
+        .ok_or(ParsingError::HTMLParsing {
+            item: "tables",
+            expr: "</table>",
+        })?;
         let (thead, tbody) = table
             .split_once("</thead>")
-            .expect("Failed to find table head");
-        let (tyear, tmonth) = thead
-            .split_once("</tr>")
-            .expect("Failed to find year and month in head");
+            .ok_or(ParsingError::HTMLParsing {
+                item: "head and body",
+                expr: "</thead>",
+            })?;
+        let (tyear, tmonth) = thead.split_once("</tr>").ok_or(ParsingError::HTMLParsing {
+            item: "year and month",
+            expr: "</tr>",
+        })?;
 
-        let tyear = tyear
-            .split("</td><td class=\"year\"")
-            .next()
-            .expect("Failed to parse year! (1)");
-        let tyear = tyear.rsplit('>').next().expect("Failed to parse year! (2)");
+        let tyear =
+            tyear
+                .split("</td><td class=\"year\"")
+                .next()
+                .ok_or(ParsingError::HTMLParsing {
+                    item: "year",
+                    expr: "</td><td class=\"year\"",
+                })?;
+        let tyear = tyear.rsplit('>').next().ok_or(ParsingError::HTMLParsing {
+            item: "year",
+            expr: ">",
+        })?;
 
         if let Ok(parsed_year) = tyear.parse::<u32>() {
             year = Some(parsed_year);
         }
 
-        let year = year.expect("Failed to parse year! (3)");
+        let year = year.ok_or(ParsingError::Generic { item: "year" })?;
 
         let tmonth = tmonth
             .split("</td></tr>")
             .next()
-            .expect("Failed to parse month! (1)");
-        let tmonth = tmonth
-            .rsplit('>')
-            .next()
-            .expect("Failed to parse month! (2)");
+            .ok_or(ParsingError::HTMLParsing {
+                item: "month",
+                expr: "</td></tr>",
+            })?;
+        let tmonth = tmonth.rsplit('>').next().ok_or(ParsingError::HTMLParsing {
+            item: "month",
+            expr: ">",
+        })?;
 
-        let month: Month = Month::from(tmonth);
+        let month: Month = Month::try_from(tmonth)?;
 
         let tbody = tbody
             .split("</tbody")
             .next()
-            .expect("Failed to parse body! (1)");
+            .ok_or(ParsingError::HTMLParsing {
+                item: "body",
+                expr: "</tbody>",
+            })?;
         let tbody = tbody
             .rsplit("<tbody>")
             .next()
-            .expect("Failed to parse body! (2)");
+            .ok_or(ParsingError::HTMLParsing {
+                item: "body",
+                expr: "<tbody>",
+            })?;
 
         let mut tdays = tbody.split_terminator("</tr>");
 
-        let mut days: [Option<Day>; 31] = [NO_DAY; 31];
+        let mut days: [Option<Day>; DAYS_IN_A_MONTH] = [NO_DAY; DAYS_IN_A_MONTH];
 
         for day in &mut days {
             if let Some(tday) = tdays.next() {
@@ -197,11 +241,11 @@ pub fn parse_html(body: &str) -> [MonthlyCalendar; MONTHS_SHOWN] {
                         if ttype.is_empty() {
                             break; // this day doesn't exist
                         }
-                        let tdiaw = tdiaw
-                            .rsplit('>')
-                            .next()
-                            .expect("Failed to parse day in a week! (1)");
-                        let diaw = DayInAWeek::from(tdiaw);
+                        let tdiaw = tdiaw.rsplit('>').next().ok_or(ParsingError::HTMLParsing {
+                            item: "day in a week",
+                            expr: ">",
+                        })?;
+                        let diaw: DayInAWeek = DayInAWeek::try_from(tdiaw)?;
                         let mko = ttype.contains("MKO");
                         let emb = ttype.contains("EMB");
                         let bio = ttype.contains("BIO");
@@ -223,10 +267,9 @@ pub fn parse_html(body: &str) -> [MonthlyCalendar; MONTHS_SHOWN] {
                 break;
             }
         }
-        let monthly = months.get_mut(mon_i).expect("Mismatched month number!");
-        *monthly = MonthlyCalendar { year, month, days };
+        months.push(MonthlyCalendar { year, month, days });
     }
-    months
+    Ok(months)
 }
 
 pub fn get_url(uprn: u32) -> String {
