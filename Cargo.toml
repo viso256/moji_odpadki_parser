@@ -7,9 +7,6 @@ edition = "2021"
 serde = { version = "1.0.204", default-features = false, features = ["serde_derive", "alloc"] }
 
 [features]
-default = ["alloc"]
-alloc = []
-std = ["alloc"]
 
 [dev-dependencies]
 reqwest = { version = "0.12.5", features = ["blocking"] }

@@ -1,5 +1,4 @@
 extern crate alloc;
-use core::clone;
 
 use alloc::{string::*, format, vec::*, borrow::*};
 
